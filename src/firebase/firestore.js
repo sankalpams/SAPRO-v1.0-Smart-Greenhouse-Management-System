@@ -7,8 +7,7 @@ import {
   deleteDoc, 
   onSnapshot, 
   query, 
-  orderBy, 
-  where,
+  orderBy,
   serverTimestamp 
 } from 'firebase/firestore';
 import { db } from './firebaseConfig';
