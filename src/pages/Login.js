@@ -1,207 +1,171 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, LogIn, UserPlus, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, LogIn, UserPlus, AlertCircle, Leaf } from 'lucide-react';
 import { signIn, signUp } from '../firebase/auth';
-// import { useTheme } from '../context/ThemeContext';
 
 const Login = () => {
-  const [isLogin, setIsLogin] = useState(true);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    name: '',
-    role: 'staff'
-  });
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  // const { theme } = useTheme();
+  const [isLogin,   setIsLogin]   = useState(true);
+  const [formData,  setFormData]  = useState({ email: '', password: '', name: '', role: 'staff' });
+  const [showPass,  setShowPass]  = useState(false);
+  const [loading,   setLoading]   = useState(false);
+  const [error,     setError]     = useState('');
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
+  const handleChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    const result = isLogin
+      ? await signIn(formData.email, formData.password)
+      : await signUp(formData.email, formData.password, formData.name, formData.role);
 
-    try {
-      let result;
-      if (isLogin) {
-        result = await signIn(formData.email, formData.password);
-      } else {
-        result = await signUp(formData.email, formData.password, formData.name, formData.role);
-      }
-
-      if (result.success) {
-        // Reload the page to trigger App.js to re-check auth state
-        window.location.reload();
-      } else {
-        setError(result.error);
-        setLoading(false);
-      }
-    } catch (err) {
-      setError('An unexpected error occurred');
+    if (result.success) {
+      window.location.reload();
+    } else {
+      setError(result.error);
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <div className="mx-auto h-12 w-12 bg-primary-600 rounded-lg flex items-center justify-center">
-            <LogIn className="h-6 w-6 text-white" />
-          </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-            {isLogin ? 'Sign in to your account' : 'Create your account'}
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            {isLogin ? "Don't have an account? " : "Already have an account? "}
-            <button
-              onClick={() => setIsLogin(!isLogin)}
-              className="font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
-            >
-              {isLogin ? 'Sign up' : 'Sign in'}
-            </button>
-          </p>
-        </div>
+    <div className="min-h-screen bg-blue-50 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Ambient glows */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2
+                        w-[700px] h-[700px] bg-blue-200/40 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-0 w-[400px] h-[400px]
+                        bg-primary-200/30 rounded-full blur-3xl" />
+      </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+      <div className="relative w-full max-w-md animate-slide-up">
+
+        {/* Card — white, rounded, soft shadow */}
+        <div className="bg-white rounded-3xl border border-blue-100 shadow-card-hover p-8">
+
+          {/* Logo */}
+          <div className="flex flex-col items-center mb-8">
+            <div className="h-14 w-14 rounded-2xl bg-primary-600 flex items-center
+                            justify-center shadow-glow-sm mb-4">
+              <Leaf className="h-7 w-7 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-[#1e3a8a] tracking-tight">
+              SAPRO Dashboard
+            </h1>
+            <p className="text-slate-500 text-sm mt-1 text-center">
+              Smart Greenhouse Management System
+            </p>
+          </div>
+
+          {/* Tab switcher — pill style */}
+          <div className="flex bg-blue-50 rounded-full p-1 mb-6 gap-1">
+            {['Sign In', 'Sign Up'].map((label, i) => {
+              const active = isLogin ? i === 0 : i === 1;
+              return (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => { setIsLogin(i === 0); setError(''); }}
+                  className={`flex-1 py-2 text-sm font-semibold rounded-full
+                              transition-all duration-200
+                              ${active
+                                ? 'bg-[#1e3a8a] text-white shadow-pill'
+                                : 'text-slate-500 hover:text-[#1e3a8a]'}`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Demo credentials */}
+          <div className="mb-5 px-4 py-2.5 rounded-xl bg-blue-50 border border-blue-100
+                          text-[11px] text-slate-500 text-center leading-relaxed">
+            Demo: <span className="text-primary-600 font-mono font-medium">admin@demo.com</span>
+            {' '}/ <span className="text-primary-600 font-mono font-medium">admin123</span>
+          </div>
+
+          {/* Error */}
           {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-              <div className="flex">
-                <AlertCircle className="h-5 w-5 text-red-400" />
-                <div className="ml-3">
-                  <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
-                </div>
-              </div>
+            <div className="mb-5 flex items-start gap-3 px-4 py-3 rounded-xl
+                            bg-red-50 border border-red-200 text-red-600 text-sm">
+              <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+              {error}
             </div>
           )}
 
-          <div className="space-y-4">
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Full Name
-                </label>
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  required={!isLogin}
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="input-field mt-1"
-                  placeholder="Enter your full name"
-                />
+                <label htmlFor="name" className="input-label">Full Name</label>
+                <input id="name" name="name" type="text" required={!isLogin}
+                  value={formData.name} onChange={handleChange}
+                  className="input-field" placeholder="Your full name" />
               </div>
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Email Address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                value={formData.email}
-                onChange={handleChange}
-                className="input-field mt-1"
-                placeholder="Enter your email"
-              />
+              <label htmlFor="email" className="input-label">Email Address</label>
+              <input id="email" name="email" type="email" required
+                value={formData.email} onChange={handleChange}
+                className="input-field" placeholder="you@example.com" />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Password
-              </label>
-              <div className="mt-1 relative">
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="input-field pr-10"
-                  placeholder="Enter your password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-gray-400" />
-                  )}
+              <label htmlFor="password" className="input-label">Password</label>
+              <div className="relative">
+                <input id="password" name="password"
+                  type={showPass ? 'text' : 'password'} required
+                  value={formData.password} onChange={handleChange}
+                  className="input-field pr-11" placeholder="••••••••" />
+                <button type="button" onClick={() => setShowPass(!showPass)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2
+                             text-slate-400 hover:text-slate-600 transition-colors">
+                  {showPass
+                    ? <EyeOff className="h-4.5 w-4.5" />
+                    : <Eye    className="h-4.5 w-4.5" />}
                 </button>
               </div>
             </div>
 
             {!isLogin && (
               <div>
-                <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Role
-                </label>
-                <select
-                  id="role"
-                  name="role"
-                  value={formData.role}
-                  onChange={handleChange}
-                  className="input-field mt-1"
-                >
+                <label htmlFor="role" className="input-label">Role</label>
+                <select id="role" name="role" value={formData.role} onChange={handleChange}
+                  className="input-field">
                   <option value="staff">Staff</option>
                   <option value="admin">Admin</option>
                 </select>
               </div>
             )}
-          </div>
 
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+            <button type="submit" disabled={loading}
+              className="btn-primary w-full mt-2">
               {loading ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <div className="h-5 w-5 rounded-full border-2 border-white
+                                border-t-transparent animate-spin" />
+              ) : isLogin ? (
+                <><LogIn className="h-4.5 w-4.5" /> Sign In</>
               ) : (
-                <>
-                  {isLogin ? (
-                    <>
-                      <LogIn className="h-5 w-5 mr-2" />
-                      Sign In
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus className="h-5 w-5 mr-2" />
-                      Sign Up
-                    </>
-                  )}
-                </>
+                <><UserPlus className="h-4.5 w-4.5" /> Create Account</>
               )}
             </button>
-          </div>
+          </form>
 
           {isLogin && (
-            <div className="text-center">
-              <button
-                type="button"
-                className="text-sm text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
-              >
+            <div className="text-center mt-4">
+              <button className="text-xs text-primary-600 hover:text-primary-700
+                                  font-medium transition-colors">
                 Forgot your password?
               </button>
             </div>
           )}
-        </form>
+        </div>
+
+        <p className="text-center text-[11px] text-slate-400 mt-4">
+          SAPRO v1.0 — Smart Greenhouse Management System
+        </p>
       </div>
     </div>
   );
